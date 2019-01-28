@@ -19,11 +19,13 @@ namespace RikrerTestProject
             foreach (var method in typeof(Program).GetRuntimeMethods().Where(x => x.Name.StartsWith("Richter")))
             {
                 dictMethod.Add(i, method);
-                Console.WriteLine($"{i}-{method.Name}");
+                Console.WriteLine($"{i}-{method.Name.Replace("Richter", "")}");
                 i++;
             }
 
             Console.WriteLine("Enter the number of method");
+
+            Thread.Sleep(1000);
 
             int number = 0;
 
@@ -63,6 +65,8 @@ namespace RikrerTestProject
 
         }
 
+
+
         //Автоматический запуск задания по завершению придыдущего
         private static void RichterAutomaticlyPlayTask()
         {
@@ -70,6 +74,28 @@ namespace RikrerTestProject
             Task cwr = t.ContinueWith(task => Console.WriteLine("The sum is:" + (task.IsFaulted?task.Exception.Message:task.Result.ToString()))/*,TaskContinuationOptions.OnlyOnFaulted*/);
         }
 
+        //Отмена всех автоматически запускаемых задач
+        private static void RichterCanceldAutomaticlyPlayTask()
+        {
+            Task<int> t = Task.Run(() => Sum(10000));
+             t.ContinueWith(task => Console.WriteLine("The sum is:" + (task.IsFaulted ? task.Exception.Message : task.Result.ToString())),TaskContinuationOptions.OnlyOnRanToCompletion);
+
+            t.ContinueWith(task => Console.WriteLine("The sum is:" + (task.IsFaulted ? task.Exception.Message : task.Result.ToString())), TaskContinuationOptions.OnlyOnFaulted);
+
+            t.ContinueWith(task => Console.WriteLine("Sum was canceled"), TaskContinuationOptions.OnlyOnRanToCompletion);
+
+        }
+
+        static int Sum(int n)
+        {
+            int sum = 0;
+            for (; n > 0; n--)
+            {
+                checked { sum += n; }
+            }
+
+            return sum;
+        }
 
         static int Sum(CancellationToken ct, int n)
         {
@@ -79,6 +105,7 @@ namespace RikrerTestProject
                 ct.ThrowIfCancellationRequested();
                 checked { sum += n; }
             }
+            
             return sum;
         }
     }
